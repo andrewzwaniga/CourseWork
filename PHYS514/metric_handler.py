@@ -264,6 +264,13 @@ class MetricAnalysis():
         rho = sp.symbols('rho')
         a = sp.symbols('a')
         Delta = sp.symbols('Delta')
+        
+        """
+        Notes:
+        ------
+        a = J/M where J is the Komar angular momentum (see 6.48 
+        in Carroll). 
+        """
 
         Delta_expr = r**2 - 2*G*M*r + a**2 
         rho2_expr = r**2 + a**2*(sp.cos(theta))**2
@@ -271,25 +278,57 @@ class MetricAnalysis():
         g = Metric(index_dict=self.KERR)
         g = g.convert_to_shorthand()
 
-        g['tt'] = -(1-(2*G*M*r)/rho**2)
+        g['tt'] = -(1-2*G*M*r/rho**2)
         g['tt'] = g['tt'].subs(rho**2, rho2_expr)
-
-        g['tphi'] = -((2*G*M*a*r*(sp.sin(theta))**2)/rho**2)
+        
+        g['tphi'] = -2*G*M*a*r*(sp.sin(theta))**2/rho**2
         g['tphi'] = g['tphi'].subs(rho**2, rho2_expr)
         g['phit'] = g['tphi'] 
-
+        
         g['rr'] = rho**2/Delta
         g['rr'] = g['rr'].subs(rho**2, rho2_expr)
         g['rr'] = g['rr'].subs(Delta, Delta_expr)
-
+        
         g['thetatheta'] = rho**2
         g['thetatheta'] = g['thetatheta'].subs(rho**2, rho2_expr)
-        
-        g['phiphi'] = (sp.sin(theta))**2/rho**2*((r**2 + a**2)**2 - a**2*Delta*(sp.sin(theta))**2)
+                
+        g['phiphi'] = ((sp.sin(theta))**2/rho**2)*((r**2 + a**2)**2 - a**2*Delta*(sp.sin(theta))**2)
         g['phiphi'] = g['phiphi'].subs(rho**2, rho2_expr)
         g['phiphi'] = g['phiphi'].subs(Delta, Delta_expr)
-
+        
         return g 
+
+    def invert_metric(self, g, index_dict): 
+        """ Invert a given metric g and return the inverted metric 
+        as a shorthand dictionary of sympy.core.symbols.Symbol objects.
+        """
+
+        import numpy as np 
+
+        n = int(np.sqrt(len(g))) # casting will not chop, we expect whole number anyways
+        #g_matrix = sp.zeros(n,n)
+        g_matrix = np.zeros([n,n])
+        for i in range(n): 
+            for j in range(n):
+                m = index_dict[i]
+                n = index_dict[j] 
+                mn = m+n
+                g_matrix[i][j] = g[mn] 
+        
+        # for my next trick, it seems unavoidable to NOT to this manually...
+        g_matrix = sp.Matrix(g_matrix[0],
+                             g_matrix[1],
+                             g_matrix[2],
+                             g_matrix[3])
+        #g_matrix_inv = np.linalg.inv(g_matrix)
+        g_inv = g_matrix**(-1)        
+        g_inv = {}
+        for i in range(n):
+            for g in range(n): 
+                m = index_dict[i]
+                n = index_dict[j] 
+                mn = m+n
+                g_inv[mn] = g_matrix_inv[i][j]  
 
     def calculate_Christoffel(self, g, index_dict, simplify): 
         """Calculate the Christoffel symbols for a given metric ``g``. 
@@ -317,6 +356,8 @@ class MetricAnalysis():
         Gamma = Christoffel(index_dict=index_dict)
         Gamma = Gamma.convert_to_shorthand()
 
+        g_inv = self.invert_metric(g=g, index_dict=index_dict)
+
         dim = len(index_dict)
         for i in range(dim):
             for j in range(dim):
@@ -337,8 +378,10 @@ class MetricAnalysis():
                         ls = sp.symbols(index_dict[l])
                         try:
                             Gamma[rmn] += (1/2)*(g[rl])**(-1)*(sp.diff(g[nl], ms) + sp.diff(g[lm], ns) - sp.diff(g[mn], ls))
+                            #Gamma[rmn] += (1/2)*g_inv[rl]*(sp.diff(g[nl], ms) + sp.diff(g[lm], ns) - sp.diff(g[mn], ls))
                         except ZeroDivisionError:
-                            print('g[{}] is zero, cannot evaluate.'.format(rl))
+                            ppp = None
+                            #print('g[{}] is zero, cannot evaluate.'.format(rl))
                     if simplify is True:
                         Gamma[rmn] = sp.simplify(Gamma[rmn])
         return Gamma
@@ -467,7 +510,8 @@ class MetricAnalysis():
                 try: 
                     ricci_scalar += (g[mn])**(-1)*ricci_tensor[mn]
                 except ZeroDivisionError:
-                    print('g[{}] is zero, cannot evaluate.'.format(mn))
+                    ppp = None
+                    #print('g[{}] is zero, cannot evaluate.'.format(mn))
         if simplify is True:
             ricci_scalar = sp.simplify(ricci_scalar)
         #sp.cancel(ricci_scalar)
@@ -589,13 +633,51 @@ class MetricAnalysis():
             The output of ``self.analyze_metric()``. 
         """
 
-        #analysis_results = self.analyze_metric(g, index_dict, simplify) 
-
         for key in analysis_results: 
             print('-----------------------------------------------------') 
             print('{key} ANALYSIS'.format(key=key))
             for index_string in analysis_results[key]: 
                 print('\t{key}[{index_string}] = {expr}'.format(key=key,
                                                                 index_string=index_string,
-                                                                expr=analysis_results[key][index_string]))
+                                                                expr=sp.latex(analysis_results[key][index_string])))
             print('-----------------------------------------------------')
+
+    def evaluate(self, name, symbol, point): 
+        """Evaluate ``symbol`` at ``point`` with variables 
+        specified by ``index_dict``. 
+
+        Parameters:
+        -----------
+        name : string 
+             A string identifying what to call the symbol. 
+
+        symbol : dict, sympy.core.symbols.Symbol
+             The symbol to be evaluated. Should have the shorthand structure
+             even if it is a scalar. For example, to evaluate a metric at a 
+             point, pass the shorthand g['tt'] etc. version. 
+
+        point : dict, float 
+             A dictionary for which the key is the variable as a 
+             sympy.core.symbols.Symbol object and the value is the
+             numerical value at which to evaluate that symbol. 
+
+        Returns:
+        --------
+        evaluated_symbol : dict, float 
+             A dictionary for which the key is whatever the key was in the 
+             original ``symbol`` dict and the value is the value of that 
+             ``symbol`` dict evaluated at ``point``. 
+        """
+
+        evaluated_symbol = symbol
+
+        for key in evaluated_symbol:
+            for var in point:
+                #print('Evaluating {name}[{key}] at {var} = {point}.'.format(name=name,
+                #key=key,
+                #var=var,
+                #point=point[var]))
+                evaluated_symbol[key] = evaluated_symbol[key].subs(var, point[var])
+
+        return evaluated_symbol
+
