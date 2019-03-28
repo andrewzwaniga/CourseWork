@@ -52,4 +52,7 @@ class Christoffel(object):
                                  b=self.index_dict[j],
                                  c=self.index_dict[k])
                     shortcut[s] = self.elements[self.index_dict[i]][self.index_dict[j]][self.index_dict[k]]
-        return shortcut 
+        self.elements = {} # start fresh
+        for key in shortcut:
+            self.elements[key] = shortcut[key] 
+

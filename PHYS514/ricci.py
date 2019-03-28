@@ -1,23 +1,14 @@
 import sympy as sp
 
-class Einstein(object):
-    """Class defining an Einstein object. 
+class Ricci(object):
+    """Class defining a Ricci object. 
 
-    The Einstein tensor is a (0,2) tensor $G_{\mu\nu} $that appears in the Einstein equation,
-    for which the solution is the metric that corresponds to a spacetime in which
-    the stress-energy tensor is $T_{\mu\nu}$. The Einstein equation is then 
-
-    \[
-    G_{\mu\nu} = 8\pi G T_{\mu\nu} 
-    \] 
-
-    where 
-
-    \[
-    G_{\mu\nu} = R_{\mu\nu} - \frac{1}{2}R g_{\mu\nu}
-    \]
+    The Ricci tensor is a (0,2) tensor $R_{\mu\nu}$ given by the following trace of 
+    the Riemann tensor: 
     
-    where $g_{\mu\nu}$ is the metric and $R_{\mu\nu}$ is the Ricci tensor, $R$ the Ricci scalar. 
+    \[
+    R_{\mu\nu} = R^{\lambda}_{~\mu\lambda\nu}
+    \]
 
     Parameters: 
     -----------
@@ -34,8 +25,8 @@ class Einstein(object):
     Properties of a class instance that are calculated from constructor data. 
 
     self.elements : dict of dict of float 
-        The entries of the Einstein tensor, made to be accessible using a 
-        method that resembles symbolic notation. That is, to get the $G_{tt}$ entry, 
+        The entries of the Ricci tensor, made to be accessible using a method that 
+        resembles symbolic notation. That is, to get the $R_{tt}$ entry, 
         call ``self.elements['t']['t']`` 
     """
 
@@ -50,7 +41,7 @@ class Einstein(object):
     
     def convert_to_shorthand(self): 
         """ A method that converts ``self.elements`` structure into a single
-        dictionary, whereby $G_{tt}$ can be accessed with key ``['tt']``. 
+        dictionary, whereby $R_{tt}$ can be accessed with key ``['tt']``. 
         Returns the conversion, but does not modify the class instance itself. 
         """
 
@@ -61,8 +52,7 @@ class Einstein(object):
                 s = s.format(a=self.index_dict[i],
                              b=self.index_dict[j])
                 shortcut[s] = self.elements[self.index_dict[i]][self.index_dict[j]]
-        self.elements = {} # start fresh 
+        self.elements = {} # start fresh
         for key in shortcut:
-            self.elements[key] = shortcut[key]
-        return shortcut 
+            self.elements[key] = shortcut[key] 
 

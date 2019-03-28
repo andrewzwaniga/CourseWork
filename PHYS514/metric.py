@@ -31,7 +31,7 @@ class Metric(object):
     self.elements : dict of dict of float 
         The entries of the metric, made to be accessible using a method that 
         resembles symbolic notation. That is, to get the $g_{tt}$ entry, 
-        call ``self.elements['t']['t']`` 
+        call ``self.elements['t']['t']``. 
     """
 
     def __init__(self, index_dict): 
@@ -56,5 +56,7 @@ class Metric(object):
                 s = s.format(a=self.index_dict[i],
                              b=self.index_dict[j])
                 shortcut[s] = self.elements[self.index_dict[i]][self.index_dict[j]]
-        return shortcut 
+        self.elements = {} # start fresh
+        for key in shortcut:
+            self.elements[key] = shortcut[key] 
 

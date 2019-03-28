@@ -1,0 +1,40 @@
+	[t]
+	\left \{ phi : 0.0, \quad r : 0.0, \quad t : 0.0, \quad theta : 0.0\right \}
+	[r]
+	\left \{ phi : 0.0, \quad r : 0.0, \quad t : 0.0, \quad theta : 0.0\right \}
+	[theta]
+	\left \{ phi : 0.0, \quad r : 0.0, \quad t : 0.0, \quad theta : 0.0\right \}
+	[phi]
+	\left \{ phi : 0.0, \quad r : 0.0, \quad t : 0.0, \quad theta : 0.0\right \}
+	[tt]
+	\frac{\left(- a^{2} \left(- 2 G M r + a^{2} + r^{2}\right) \sin^{2}{\left (\theta \right )} + \left(a^{2} + r^{2}\right)^{2}\right) \sin^{2}{\left (\theta \right )}}{\left(a^{2} \cos^{2}{\left (\theta \right )} + r^{2}\right) \left(- \frac{4 G^{2} M^{2} a^{2} r^{2} \sin^{4}{\left (\theta \right )}}{\left(a^{2} \cos^{2}{\left (\theta \right )} + r^{2}\right)^{2}} + \frac{\left(- a^{2} \left(- 2 G M r + a^{2} + r^{2}\right) \sin^{2}{\left (\theta \right )} + \left(a^{2} + r^{2}\right)^{2}\right) \left(\frac{2 G M r}{a^{2} \cos^{2}{\left (\theta \right )} + r^{2}} - 1\right) \sin^{2}{\left (\theta \right )}}{a^{2} \cos^{2}{\left (\theta \right )} + r^{2}}\right)}
+	[tr]
+	0
+	[ttheta]
+	0
+	[tphi]
+	\frac{2 G M a r \sin^{2}{\left (\theta \right )}}{\left(a^{2} \cos^{2}{\left (\theta \right )} + r^{2}\right) \left(- \frac{4 G^{2} M^{2} a^{2} r^{2} \sin^{4}{\left (\theta \right )}}{\left(a^{2} \cos^{2}{\left (\theta \right )} + r^{2}\right)^{2}} + \frac{\left(- a^{2} \left(- 2 G M r + a^{2} + r^{2}\right) \sin^{2}{\left (\theta \right )} + \left(a^{2} + r^{2}\right)^{2}\right) \left(\frac{2 G M r}{a^{2} \cos^{2}{\left (\theta \right )} + r^{2}} - 1\right) \sin^{2}{\left (\theta \right )}}{a^{2} \cos^{2}{\left (\theta \right )} + r^{2}}\right)}
+	[rt]
+	0
+	[rr]
+	\frac{- 2 G M r + a^{2} + r^{2}}{a^{2} \cos^{2}{\left (\theta \right )} + r^{2}}
+	[rtheta]
+	0
+	[rphi]
+	0
+	[thetat]
+	0
+	[thetar]
+	0
+	[thetatheta]
+	\frac{1}{a^{2} \cos^{2}{\left (\theta \right )} + r^{2}}
+	[thetaphi]
+	0
+	[phit]
+	\frac{2 G M a r \sin^{2}{\left (\theta \right )}}{\left(a^{2} \cos^{2}{\left (\theta \right )} + r^{2}\right) \left(- \frac{4 G^{2} M^{2} a^{2} r^{2} \sin^{4}{\left (\theta \right )}}{\left(a^{2} \cos^{2}{\left (\theta \right )} + r^{2}\right)^{2}} + \frac{\left(- a^{2} \left(- 2 G M r + a^{2} + r^{2}\right) \sin^{2}{\left (\theta \right )} + \left(a^{2} + r^{2}\right)^{2}\right) \left(\frac{2 G M r}{a^{2} \cos^{2}{\left (\theta \right )} + r^{2}} - 1\right) \sin^{2}{\left (\theta \right )}}{a^{2} \cos^{2}{\left (\theta \right )} + r^{2}}\right)}
+	[phir]
+	0
+	[phitheta]
+	0
+	[phiphi]
+	\frac{\frac{2 G M r}{a^{2} \cos^{2}{\left (\theta \right )} + r^{2}} - 1}{- \frac{4 G^{2} M^{2} a^{2} r^{2} \sin^{4}{\left (\theta \right )}}{\left(a^{2} \cos^{2}{\left (\theta \right )} + r^{2}\right)^{2}} + \frac{\left(- a^{2} \left(- 2 G M r + a^{2} + r^{2}\right) \sin^{2}{\left (\theta \right )} + \left(a^{2} + r^{2}\right)^{2}\right) \left(\frac{2 G M r}{a^{2} \cos^{2}{\left (\theta \right )} + r^{2}} - 1\right) \sin^{2}{\left (\theta \right )}}{a^{2} \cos^{2}{\left (\theta \right )} + r^{2}}}

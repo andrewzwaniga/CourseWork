@@ -56,4 +56,6 @@ class Riemann(object):
                                      c=self.index_dict[k],
                                      d=self.index_dict[l])
                         shortcut[s] = self.elements[self.index_dict[i]][self.index_dict[j]][self.index_dict[k]][self.index_dict[l]]
-        return shortcut 
+        self.elements = {} # start fresh
+        for key in shortcut:
+            self.elements[key] = shortcut[key] 
