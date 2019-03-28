@@ -8,6 +8,7 @@ from ricci import Ricci
 
 import sympy as sp
 import numpy as np
+import math 
     
 class MetricAnalysis(object):
     """Class with functions that will operate on a given metric
@@ -31,12 +32,32 @@ class MetricAnalysis(object):
         R = sp.symbols('R')
 
         g = Metric(index_dict=self.SCHWARZCHILD)
-        #g = g.convert_to_shorthand()
         g.convert_to_shorthand()
         g.elements['tt'] = 1 - R/r
         g.elements['rr'] = (1 - R/r)**(-1)
         g.elements['thetatheta'] = r**2
         g.elements['phiphi'] = r**2*(sp.sin(theta))**2
+
+        return g 
+
+    def init_schwarzchild_func(self):
+        """Initialize Schwarzchild metric
+        but the variables are now functions 
+        of a parameter.
+        """
+        t = sp.Function(self.SCHWARZCHILD[0])
+        r = sp.Function(self.SCHWARZCHILD[1])
+        theta = sp.Function(self.SCHWARZCHILD[2])
+        phi = sp.Function(self.SCHWARZCHILD[3])
+        R = sp.symbols('R')
+        y = sp.symbols('y')
+
+        g = Metric(index_dict=self.SCHWARZCHILD)
+        g.convert_to_shorthand()
+        g.elements['tt'] = 1 - R*r(y)**(-1)
+        g.elements['rr'] = (1-R*r(y)**(-1))**(-1)
+        g.elements['thetatheta'] = r(y)**2
+        g.elements['phiphi'] = r(y)**2*(sp.sin(theta(y)))**2
 
         return g 
 
@@ -46,7 +67,6 @@ class MetricAnalysis(object):
         theta = sp.symbols(self.S2[0])
         phi = sp.symbols(self.S2[1])
         g = Metric(index_dict=self.S2)
-        #g = g.convert_to_shorthand()
         g.convert_to_shorthand()
         g.elements['thetatheta'] = 1 
         g.elements['phiphi'] = (sp.sin(theta))**2
@@ -63,7 +83,6 @@ class MetricAnalysis(object):
         H = sp.symbols('H') 
 
         g = Metric(index_dict=self.DESITTER)
-        #g = g.convert_to_shorthand()
         g.convert_to_shorthand()
         g.elements['tt'] = -1 
         g.elements['xx'] = sp.exp(2*H*t)
@@ -97,7 +116,6 @@ class MetricAnalysis(object):
         rho2_expr = r**2 + a**2*(sp.cos(theta))**2
 
         g = Metric(index_dict=self.KERR)
-        #g = g.convert_to_shorthand()
         g.convert_to_shorthand()
 
         g.elements['tt'] = -(1-2*G*M*r/rho**2)
@@ -138,7 +156,6 @@ class MetricAnalysis(object):
 
         print('Inverting the matrix...') 
         g_matrix_inv = g_matrix**(-1)        
-        #g_inv = {}
         g_inv = Metric(index_dict=g.index_dict)
         for i in range(N):
             for j in range(N): 
@@ -173,7 +190,6 @@ class MetricAnalysis(object):
         """
 
         Gamma = Christoffel(index_dict=g.index_dict)
-        #Gamma = Gamma.convert_to_shorthand()
         Gamma.convert_to_shorthand()
         
         if g_inv == None:
@@ -229,7 +245,6 @@ class MetricAnalysis(object):
         """
 
         riemann = Riemann(index_dict=Gamma.index_dict) 
-        #riemann = riemann.convert_to_shorthand()
         riemann.convert_to_shorthand()
         
         dim = len(riemann.index_dict)
@@ -284,7 +299,6 @@ class MetricAnalysis(object):
         """
 
         ricci = Ricci(index_dict=riemann.index_dict) 
-        #ricci = ricci.convert_to_shorthand()
         ricci.convert_to_shorthand()
 
         dim = len(ricci.index_dict)
@@ -338,11 +352,8 @@ class MetricAnalysis(object):
                     ricci_scalar.elements[''] += g_inv.elements[mn]*ricci_tensor.elements[mn]
                 except ZeroDivisionError:
                     ppp = None
-                    #print('g[{}] is zero, cannot evaluate.'.format(mn))
-        if simplify is True:
-            ricci_scalar.elements[''] = sp.simplify(ricci_scalar.elements[''])
-        #sp.cancel(ricci_scalar)
-        #ricci_scalar = {'':ricci_scalar} # convert to dictionary for handling - scalars have 0 indices  
+            if simplify is True:
+                ricci_scalar.elements[''] = sp.simplify(ricci_scalar.elements[''])
         return ricci_scalar 
 
     def calculate_Einstein_tensor(self, ricci_tensor, ricci_scalar, g, simplify):
@@ -374,7 +385,6 @@ class MetricAnalysis(object):
         """
 
         einstein = Einstein(index_dict=ricci_tensor.index_dict) 
-        #einstein = einstein.convert_to_shorthand()
         einstein.convert_to_shorthand()
 
         dim = len(einstein.index_dict)
@@ -387,6 +397,90 @@ class MetricAnalysis(object):
                 if simplify is True:
                     einstein.elements[mn] = sp.simplify(einstein.elements[mn])
         return einstein
+
+    def solve_geodesic(self, g, likeness):
+        """Calculate and solve the geodesic equations
+        for a static, spherically symmetric metric for a timelike, 
+        null, or spacelike worldline that is parameterized 
+        by an affine parameter, in order to arrive at an 
+        expression for the effective potential in terms of a 
+        radial coordinate.  
+
+        Parameters: 
+        -----------
+        g : Metric 
+            Note that this function should be passed a Metric instance
+            but the entries of g.elements should be sp.Function objects
+            and not sp.symbols objects, otherwise the variables in the 
+            geodesic will not coincide with those in the metric! 
+
+        likeness : string 
+            One of 'timelike', 'spacelike', or 'null' in order to 
+            determine a value for ``epsilon`` that will enter into
+            the RHS of the equation 
+            \[
+            \epsilon = -g_{\mu\nu}\frac{dx^\mu}{d\lambda}\frac{dx^\nu}{d\lambda}
+            ]]
+        """
+
+        worldline_likeness = {'timelike':-1, 'spacelike':1, 'null':1}
+        epsilon = worldline_likeness[likeness]  
+
+        g_inv = self.invert_metric(g=g) 
+        Gamma = self.calculate_Christoffel(g=g, g_inv=g_inv, simplify=True) 
+        
+        t = sp.Function(g.index_dict[0])
+        r = sp.Function(g.index_dict[1])
+        theta = sp.Function(g.index_dict[2])
+        phi = sp.Function(g.index_dict[3])
+        
+        y = sp.symbols('y')
+        
+        worldline = {'t':t, 'r':r, 'theta':theta, 'phi':phi}
+
+        K = len(Gamma.index_dict)
+        sum = 0 # for geodesic equation
+        ds2 = 0 # for metric equation $ds^2 = g_{\mu\nu}\dot{x}^\mu\dot{x}^\nu = -1$ for timelike
+        for i in range(K):
+            for j in range(K):
+                m = Gamma.index_dict[i] # mu
+                n = Gamma.index_dict[j] # nu 
+                rmn = 'r'+m+n
+                mn = m+n
+                xm = worldline[m] 
+                xn = worldline[n] 
+                sum += Gamma.elements[rmn]*(xm(y).diff(y))*(xn(y).diff(y))
+                ds2 += g.elements[mn]*(xm(y).diff(y))*(xn(y).diff(y))
+        geodesic = sp.Eq(r(y).diff(y,y)+sum, 0)
+        ds2 = sp.Eq(ds2, epsilon)  
+
+        # Now fix theta=pi/2 because the direction of 
+        # angular momentum is conserved (there are two 
+        # Killing vectors d_t and d_phi for a static,
+        # spherically symmetric metric) 
+
+        geodesic = geodesic.subs(theta(y).diff(y), 0)
+        geodesic = geodesic.subs(theta(y), math.pi/2)
+        ds2 = ds2.subs(theta(y).diff(y), 0)
+        ds2 = ds2.subs(theta(y), math.pi/2) 
+        ds2 = ds2.evalf()
+        print(sp.latex(geodesic))
+        print(sp.latex(ds2))
+
+        geodesic = sp.dsolve(geodesic)
+        L = sp.symbols('L')
+        E = sp.symbols('E')
+        R = sp.symbols('R')
+        ds2 = ds2.subs(phi(y).diff(y), L*r(y)**(-2))
+        ds2 = ds2.subs(t(y).diff(y), E*(1-R*r(y)**(-1))**(-1))
+        ds2 = sp.solve(ds2, (r(y).diff(y))**2)
+        print('The solution for $\Big{(}\\frac{dr}{dy}\Big{)}^2$ is:')
+        print(sp.latex(ds2))
+        # At this point there should be just ddot(r) and ddot(t) 
+        # left between these two equations and we should be 
+        # able to sub ddot(r) into ddot(t) equation and then 
+        # integrate to get dot(t) and plug it back into ddot(r) etc. 
+
 
     def analyze_metric(self, g, g_inv, simplify):
         """Pass this function the metric to be analyzed. 
@@ -462,12 +556,15 @@ class MetricAnalysis(object):
         """
 
         for key in analysis_results: 
-            print('-----------------------------------------------------') 
+            print('-----------------------------------------------------')
+            print('SHOWING ONLY NONZERO COMPONENTS...')
             print('{key} ANALYSIS'.format(key=key))
             for index_string in analysis_results[key].elements: 
-                print('\t{key}[{index_string}] = {expr}'.format(key=key,
-                                                                index_string=index_string,
-                                                                expr=sp.latex(analysis_results[key].elements[index_string])))
+                if analysis_results[key].elements[index_string] != 0:
+                    print('\t{key}[{index_string}] = {expr}'.format(key=key,
+                                                                    index_string=index_string,
+                                                                    expr=sp.latex(analysis_results[key].elements[index_string])))
+            print('ALL OTHER COMPONENTS ARE ZERO.')
             print('-----------------------------------------------------')
 
     def evaluate(self, name, symbol, point): 
@@ -643,5 +740,4 @@ class MetricAnalysis(object):
                 #print(constructed_symbol.elements[index_list[i]])
 
             return constructed_symbol
-        
         
