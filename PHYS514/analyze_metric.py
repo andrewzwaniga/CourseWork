@@ -11,8 +11,8 @@ import math
 
 analysis = MetricAnalysis() 
 
-problem_2 = True
-problem_3 = True
+problem_2 = False
+problem_3 = False
 
 if problem_2: 
     print('#############################################################################################')

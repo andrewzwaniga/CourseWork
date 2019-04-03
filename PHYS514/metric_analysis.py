@@ -21,6 +21,7 @@ class MetricAnalysis(object):
         self.S2 = {0:'theta', 1:'phi'}
         self.DESITTER = {0:'t', 1:'x', 2:'y', 3:'z'} 
         self.KERR = {0:'t', 1:'r', 2:'theta', 3:'phi'}
+        self.FRW = {0:'t', 1:'r', 2:'theta', 3:'phi'}
 
     def init_schwarzchild(self):
         """Initialize Schwarzchild metric.
@@ -137,6 +138,27 @@ class MetricAnalysis(object):
         g.elements['phiphi'] = g.elements['phiphi'].subs(Delta, Delta_expr)
         
         return g 
+
+    def init_FRW(self): 
+        """Initialize the FRW metric on 4D spacetime.
+        """ 
+        
+        t = sp.symbols('t') 
+        r = sp.symbols('r') 
+        kappa = sp.symbols('k') 
+        theta = sp.symbols('theta')
+        phi = sp.symbols('phi') 
+        a = sp.Function('a')
+
+        g = Metric(index_dict=self.FRW) 
+        g.convert_to_shorthand() 
+
+        g.elements['tt'] = -1 
+        g.elements['rr'] = a(t)**2/(1-kappa*r**2)
+        g.elements['thetatheta'] = a(t)**2*r**2
+        g.elements['phiphi'] = a(t)**2*r**2*sp.sin(theta)**2
+
+        return g
 
     def invert_metric(self, g): 
         """ Invert a given metric g and return the inverted metric 
@@ -531,20 +553,20 @@ class MetricAnalysis(object):
         Gamma = self.calculate_Christoffel(g=g, g_inv=g_inv, simplify=simplify['Gamma'])
         print('Done.')
         print('Calculating Riemann tensor...') 
-        riemann = self.calculate_Riemann(Gamma=Gamma, simplify=simplify['riemann'])
+        riemann = self.calculate_Riemann(Gamma=Gamma, simplify=simplify['R'])
         print('Done.')
         print('Calculating Ricci tensor...')
-        ricci_tensor = self.calculate_Ricci_tensor(riemann=riemann, simplify=simplify['ricci_tensor'])
+        ricci_tensor = self.calculate_Ricci_tensor(riemann=riemann, simplify=simplify['P'])
         print('Done.')
         print('Calculating Ricci scalar...') 
-        ricci_scalar = self.calculate_Ricci_scalar(ricci_tensor=ricci_tensor, g=g, g_inv=g_inv, simplify=simplify['ricci_scalar'])
+        ricci_scalar = self.calculate_Ricci_scalar(ricci_tensor=ricci_tensor, g=g, g_inv=g_inv, simplify=simplify['Q'])
         print('Done.') 
         print('Calculating Einstein tensor...') 
-        einstein = self.calculate_Einstein_tensor(ricci_tensor=ricci_tensor, ricci_scalar=ricci_scalar, g=g, simplify=simplify['einstein'])
+        einstein = self.calculate_Einstein_tensor(ricci_tensor=ricci_tensor, ricci_scalar=ricci_scalar, g=g, simplify=simplify['G'])
         print('Done.')
 
-        return {'Gamma':Gamma, 'riemann':riemann, 'ricci_tensor':ricci_tensor,
-                'ricci_scalar':ricci_scalar, 'einstein':einstein}
+        return {'Gamma':Gamma, 'R':riemann, 'P':ricci_tensor,
+                'Q':ricci_scalar, 'G':einstein}
 
     def print_results(self, analysis_results):
         """Print out the results of ``self.analyze_metric()``. 
@@ -561,7 +583,7 @@ class MetricAnalysis(object):
             print('{key} ANALYSIS'.format(key=key))
             for index_string in analysis_results[key].elements: 
                 if analysis_results[key].elements[index_string] != 0:
-                    print('\t{key}[{index_string}] = {expr}'.format(key=key,
+                    print('\t{key}_{index_string} &= {expr}\\\\'.format(key=key,
                                                                     index_string=index_string,
                                                                     expr=sp.latex(analysis_results[key].elements[index_string])))
             print('ALL OTHER COMPONENTS ARE ZERO.')
